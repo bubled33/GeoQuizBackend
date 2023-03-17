@@ -8,10 +8,16 @@ from src.untils.role_manager import Role, Permissions, RoleCarrier
 from src.untils.roles import user_role
 
 
+class UserStatuses(str, Enum):
+    not_verify = 'NOT_VERIFY'
+    active = 'ACTIVEs'
+
+
 class User(Document, RoleCarrier):
     email: EmailStr
     username: str
-    password: str
+    hashed_password: str
+    status: UserStatuses = UserStatuses.not_verify
     roles: List[str] = [user_role.tag]
 
     def has_role(self, role: Role) -> bool:
@@ -19,4 +25,3 @@ class User(Document, RoleCarrier):
 
     def has_permission(self, permission: str):
         return bool(next(role for role in self.roles if self._role_manager.get(role).has_permission(permission)))
-

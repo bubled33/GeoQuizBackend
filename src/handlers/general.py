@@ -4,8 +4,13 @@ from urllib import response
 from fastapi import APIRouter, FastAPI
 from starlette.requests import Request
 
+from src.config import settings
+from src.database import User
 from src.untils.logger import LoggerGroup, ConsoleLogger, Log
+from src.untils.roles import user_role,admin_role,owner_role
+from src.untils.role_manager import RoleManager
 
+from src.database import RedisManager, BeanieManager, RedisConnectData, BeanieConnectData
 from fastapi.responses import Response
 
 router = APIRouter()
@@ -27,5 +32,27 @@ async def lifespan(app: FastAPI):
 
 async def add_process_time_header(request: Request, call_next):
     logger = LoggerGroup([ConsoleLogger()])
+    role_manager = RoleManager(roles=[user_role, owner_role, admin_role])
+    redis_manager = RedisManager(
+        connect_data=RedisConnectData(
+            username=settings.Redis.username,
+            password=settings.Redis.password,
+            host=settings.Redis.host,
+            port=settings.Redis.port,
+            database=settings.Redis.database
+    ))
+    beanie_manager = BeanieManager(
+        connect_data=BeanieConnectData(
+            username=settings.MongoDB.username,
+            password=settings.MongoDB.password,
+            host=settings.MongoDB.host,
+            port=settings.MongoDB.port,
+            database=settings.MongoDB.database
+    ), models=[User], role_manager=role_manager)
+    await beanie_manager.init()
+    await logger.log(Log('MongoDB проинициализирована'))
+    redis = await redis_manager.get_redis()
+    await logger.log(Log('Redis проинициализирована'))
+
     await logger.log(Log('Сервер запущен!'))
     return response

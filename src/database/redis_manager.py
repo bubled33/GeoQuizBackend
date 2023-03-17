@@ -31,6 +31,7 @@ class RedisManager:
                             username=self._connect_data.username,
                             password=self._connect_data.password,
                             )
+        await self._redis.initialize()
 
     async def get_redis(self) -> Redis:
         if connection_pool := self._connection_pool:

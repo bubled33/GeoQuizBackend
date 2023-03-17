@@ -6,8 +6,9 @@ from starlette.requests import Request
 
 from src.config import settings
 from src.database import User
+from src.untils.email_manager import EmailManager
 from src.untils.logger import LoggerGroup, ConsoleLogger, Log
-from src.untils.roles import user_role,admin_role,owner_role
+from src.untils.roles import user_role, admin_role, owner_role
 from src.untils.role_manager import RoleManager
 
 from src.database import RedisManager, BeanieManager, RedisConnectData, BeanieConnectData
@@ -26,12 +27,6 @@ async def on_ping():
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger = LoggerGroup([ConsoleLogger()])
-    await logger.log(Log('Сервер запущен!'))
-    yield
-    await logger.log((Log('Сервер остановлен!')))
-
-async def add_process_time_header(request: Request, call_next):
-    logger = LoggerGroup([ConsoleLogger()])
     role_manager = RoleManager(roles=[user_role, owner_role, admin_role])
     redis_manager = RedisManager(
         connect_data=RedisConnectData(
@@ -40,7 +35,7 @@ async def add_process_time_header(request: Request, call_next):
             host=settings.Redis.host,
             port=settings.Redis.port,
             database=settings.Redis.database
-    ))
+        ))
     beanie_manager = BeanieManager(
         connect_data=BeanieConnectData(
             username=settings.MongoDB.username,
@@ -48,11 +43,24 @@ async def add_process_time_header(request: Request, call_next):
             host=settings.MongoDB.host,
             port=settings.MongoDB.port,
             database=settings.MongoDB.database
-    ), models=[User], role_manager=role_manager)
+        ), models=[User], role_manager=role_manager)
     await beanie_manager.init()
+    app.state.beanie_manager = beanie_manager
     await logger.log(Log('MongoDB проинициализирована'))
-    redis = await redis_manager.get_redis()
+    await redis_manager.init()
+    app.state.redis_manager = redis_manager
     await logger.log(Log('Redis проинициализирована'))
+    email_manager = EmailManager(username=settings.Email.username, password=settings.Email.password)
+    app.state.email_manager = email_manager
+    await logger.log(Log('EmailManager проинициализирован'))
+    await email_manager.init()
+    await logger.log(Log('Сервер запущен!'))
+    yield
+    await logger.log((Log('Сервер остановлен!')))
+
+
+async def add_process_time_header(request: Request, call_next):
+    logger = LoggerGroup([ConsoleLogger()])
 
     await logger.log(Log('Сервер запущен!'))
     return response

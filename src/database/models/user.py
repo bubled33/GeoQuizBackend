@@ -1,6 +1,7 @@
 from enum import Enum
 from typing import List
 
+import bcrypt
 from beanie import Document
 from pydantic import EmailStr
 
@@ -25,3 +26,6 @@ class User(Document, RoleCarrier):
 
     def has_permission(self, permission: str):
         return bool(next(role for role in self.roles if self._role_manager.get(role).has_permission(permission)))
+
+    def check_password(self, password: str) -> bool:
+        return bcrypt.checkpw(password.encode('utf-8'), self.hashed_password.encode('utf-8'))

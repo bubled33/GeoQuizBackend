@@ -4,6 +4,8 @@ from redis.asyncio.client import Redis
 
 __all__ = ['RedisConnectData', 'RedisManager']
 
+from redis.asyncio.connection import ConnectionPool
+
 
 @dataclass
 class RedisConnectData:
@@ -20,12 +22,12 @@ class RedisManager:
         self._connect_data = connect_data
 
     @property
-    def _connection_pool(self) -> Redis | None:
+    def connection_pool(self) -> ConnectionPool | None:
         if not self._redis:
             return None
         return self._redis.connection_pool
 
-    async def _init_redis(self):
+    async def init(self):
         self._redis = Redis(host=self._connect_data.host,
                             port=self._connect_data.port,
                             username=self._connect_data.username,
@@ -33,8 +35,3 @@ class RedisManager:
                             )
         await self._redis.initialize()
 
-    async def get_redis(self) -> Redis:
-        if connection_pool := self._connection_pool:
-            return connection_pool
-        await self._init_redis()
-        return self._connection_pool

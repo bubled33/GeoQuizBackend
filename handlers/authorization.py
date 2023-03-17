@@ -4,16 +4,17 @@ import bcrypt
 from beanie import PydanticObjectId
 from beanie.odm.operators.update.general import Set
 from fastapi import APIRouter, Depends
+
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import EmailStr, BaseModel
 from redis.asyncio.client import Redis
+from starlette import status
 
 from src.database import User
-from src.database.models.user import UserStatuses
+from database.models.user import UserStatuses
 from src.handlers.depends import get_redis, get_email_manager, get_current_user
-from src.untils.email_manager import EmailManager
-from src.untils.exceptions import account_already_exists, token_expired, username_already_exists, user_invalid_password, \
-    user_not_exists
+from untils.email_manager import EmailManager
+from src.untils.exceptions import account_already_exists, token_expired, user_invalid_password, user_not_exists
 
 router = APIRouter(prefix='/authorization')
 
@@ -22,7 +23,7 @@ class Token(BaseModel):
     access_token: str
 
 
-@router.post('/register')
+@router.post('/register', status_code=status.HTTP_201_CREATED)
 async def on_register(email: EmailStr, username: str, password: str, redis: Redis = Depends(get_redis),
                       email_manager: EmailManager = Depends(get_email_manager)):
     user = await User.find_one(User.email == email)

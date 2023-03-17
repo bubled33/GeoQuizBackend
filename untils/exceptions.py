@@ -1,4 +1,5 @@
 from fastapi import HTTPException
+from fastapi.responses import Response
 
 account_already_exists = HTTPException(status_code=400, detail="Account already exists!")
 username_already_exists = HTTPException(status_code=400, detail='username_already_exists')

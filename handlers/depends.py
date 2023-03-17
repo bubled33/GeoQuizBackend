@@ -1,13 +1,11 @@
 from beanie import PydanticObjectId
 from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer
-from redis.asyncio import Redis
 from redis.asyncio.client import Redis
-from redis.asyncio.connection import ConnectionPool
 from starlette.requests import Request
 
 from src.database import RedisManager, User
-from src.untils.email_manager import EmailManager
+from untils.email_manager import EmailManager
 
 
 def get_redis(request: Request) -> Redis:

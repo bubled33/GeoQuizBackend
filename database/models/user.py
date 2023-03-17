@@ -5,8 +5,8 @@ import bcrypt
 from beanie import Document
 from pydantic import EmailStr
 
-from src.untils.role_manager import Role, Permissions, RoleCarrier
-from src.untils.roles import user_role
+from untils.role_manager import Role, RoleCarrier
+from untils.roles import user_role
 
 
 class UserStatuses(str, Enum):

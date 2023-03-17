@@ -1,10 +1,6 @@
-import asyncio
-
 import uvicorn
 from fastapi import FastAPI
 
-from src.database import RedisManager, RedisConnectData
-from src.untils.logger import LoggerGroup, ConsoleLogger, Log
 from src.handlers import general_router, lifespan, authorization_router
 
 app = FastAPI(lifespan=lifespan)

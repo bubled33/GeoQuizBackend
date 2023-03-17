@@ -7,7 +7,7 @@ __all__ = ['BeanieManager', 'BeanieConnectData']
 
 from motor.motor_asyncio import AsyncIOMotorClient
 
-from src.untils.role_manager import RoleManager, RoleCarrier
+from untils.role_manager import RoleManager, RoleCarrier
 
 
 @dataclass

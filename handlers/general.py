@@ -6,10 +6,10 @@ from starlette.requests import Request
 
 from src.config import settings
 from src.database import User
-from src.untils.email_manager import EmailManager
+from untils.email_manager import EmailManager
 from src.untils.logger import LoggerGroup, ConsoleLogger, Log
-from src.untils.roles import user_role, admin_role, owner_role
-from src.untils.role_manager import RoleManager
+from untils.roles import user_role, admin_role, owner_role
+from untils.role_manager import RoleManager
 
 from src.database import RedisManager, BeanieManager, RedisConnectData, BeanieConnectData
 from fastapi.responses import Response

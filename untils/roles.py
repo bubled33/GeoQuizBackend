@@ -2,7 +2,7 @@
 """
 Roles & Permissions
 """
-from src.untils.role_manager import Permissions, Role
+from untils.role_manager import Permissions, Role
 
 
 class UserPermissions(Permissions):

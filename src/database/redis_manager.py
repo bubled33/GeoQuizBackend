@@ -4,6 +4,7 @@ from redis.asyncio.client import Redis
 
 __all__ = ['RedisConnectData', 'RedisManager']
 
+
 @dataclass
 class RedisConnectData:
     username: str

@@ -1,26 +1,28 @@
+from untils.role_manager import Permissions, Role
 
 """
-Roles & Permissions
+Permissions
 """
-from untils.role_manager import Permissions, Role
 
 
 class UserPermissions(Permissions):
-    ping = 'PING'
-
-
-user_role = Role(tag='user', permissions=UserPermissions)
+    pass
 
 
 class AdminPermissions(Permissions):
-    ping = 'PING'
-
-
-admin_role = Role(tag='admin', permissions=AdminPermissions)
+    pass
 
 
 class OwnerPermissions(Permissions):
-    ping = 'PING'
+    pass
 
+
+"""
+Roles
+"""
+
+user_role = Role(tag='user', permissions=UserPermissions)
+
+admin_role = Role(tag='admin', permissions=AdminPermissions)
 
 owner_role = Role(tag='owner', permissions=OwnerPermissions)

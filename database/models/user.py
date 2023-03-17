@@ -1,17 +1,23 @@
 from enum import Enum
 from typing import List
+from uuid import uuid4
 
 import bcrypt
 from beanie import Document
-from pydantic import EmailStr
+from pydantic import EmailStr, BaseModel
+from redis.asyncio.client import Redis
 
 from untils.role_manager import Role, RoleCarrier
 from untils.roles import user_role
 
 
+class Token(BaseModel):
+    access_token: str
+
+
 class UserStatuses(str, Enum):
     not_verify = 'NOT_VERIFY'
-    active = 'ACTIVEs'
+    active = 'ACTIVE'
 
 
 class User(Document, RoleCarrier):
@@ -29,3 +35,16 @@ class User(Document, RoleCarrier):
 
     def check_password(self, password: str) -> bool:
         return bcrypt.checkpw(password.encode('utf-8'), self.hashed_password.encode('utf-8'))
+
+    async def terminate_all(self, redis: Redis):
+
+        async for key in redis.scan_iter():
+            if 'Auth' not in key.decode('utf-8'):
+                continue
+            if (await redis.get(key)).decode('utf-8') == str(self.id):
+                await redis.delete(key)
+
+    async def login(self, redis: Redis) -> Token:
+        token = uuid4()
+        await redis.set(f'Auth-{token}', str(self.id))
+        return Token(access_token=str(token))

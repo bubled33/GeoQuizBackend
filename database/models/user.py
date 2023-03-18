@@ -3,7 +3,7 @@ from typing import List
 from uuid import uuid4
 
 import bcrypt
-from beanie import Document
+from beanie import Document, PydanticObjectId
 from pydantic import EmailStr, BaseModel
 from redis.asyncio.client import Redis
 
@@ -52,8 +52,43 @@ class User(Document, RoleCarrier):
         await redis.set(f'Auth-{token}', str(self.id))
         return Token(access_token=str(token))
 
+    @property
+    def to_out(self) -> 'OutUser':
+        return OutUser(
+            email=self.email,
+            username=self.username,
+            roles=self.roles,
+            user_id=self.id
+        )
 
-class OutAccount(BaseModel):
+
+class InUser(BaseModel):
+    username: str
+    email: EmailStr
+    password: str
+
+    class Config:
+        schema_extra = {'description': 'Входная модель пользователя',
+                        'example': {
+                            'username': 'example_user',
+                            'password': 'password',
+                            'email': 'example@gmail.com'
+                        }}
+
+
+class OutUser(BaseModel):
     email: EmailStr
     username: str
     roles: List[str]
+
+    user_id: PydanticObjectId
+
+    class Config:
+        schema_extra = {
+            'description': 'Выходная модель пользователя',
+            'example': {
+                'email': 'example@gmail.com',
+                'username': 'example_user',
+                'roles': ['admin', 'user'],
+                'user_id': '641526320dabd6c5f784cef5'
+            }}

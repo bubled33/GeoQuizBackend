@@ -5,6 +5,7 @@ from fastapi import APIRouter, FastAPI
 from config import settings
 from database import User
 from database.models.quiz import Quiz
+from database.models.quiz_session import QuizSession
 from untils.email_manager import EmailManager
 from untils.logger import LoggerGroup, ConsoleLogger, Log
 from untils.roles import user_role, admin_role, owner_role
@@ -18,7 +19,7 @@ router = APIRouter()
 __all__ = ['router']
 
 
-@router.get('/ping')
+@router.get('/ping', summary='Проверить статус сервера')
 async def on_ping():
     return Response(status_code=200)
 
@@ -44,7 +45,7 @@ async def lifespan(app: FastAPI):
             host=settings.MongoDB.host,
             port=settings.MongoDB.port,
             database=settings.MongoDB.database
-        ), models=[User, Quiz], role_manager=role_manager)
+        ), models=[User, Quiz, QuizSession], role_manager=role_manager)
 
     await beanie_manager.init()
     app.state.beanie_manager = beanie_manager

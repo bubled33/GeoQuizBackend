@@ -14,11 +14,11 @@ from database.models.quiz import InQuiz, EditQuiz, Quiz, OutQuiz, QuestionTypes
 from fastapi import APIRouter, Depends, Body, Query
 
 from handlers.depends import UserGetter, get_quiz
-from untils.exceptions import permission_denied
+from untils.exceptions import permission_denied, user_not_exists, quiz_not_exists
 
-router = APIRouter(prefix='/quiz', tags=['API Викторин'])
+router = APIRouter(prefix='/quiz', tags=['API Викторин'], responses={user_not_exists.status_code: {'description': user_not_exists.detail}})
 
-@router.post('/create', summary='Создать викторину', responses={201: {'model': OutQuiz,  'description': 'Объект созданной викторины'}}, status_code=201)
+@router.post('/create', summary='Создать викторину', responses={quiz_not_exists.status_code: {'detail': quiz_not_exists},201: {'model': OutQuiz,  'description': 'Объект созданной викторины'},user_not_exists.status_code: {'description': user_not_exists.detail}}, status_code=201)
 async def on_create_quiz(quiz: InQuiz, user=Depends(UserGetter().get_current_user)):
     image = quiz.image
     quiz = await Quiz(questions=quiz.questions,
@@ -32,7 +32,7 @@ async def on_create_quiz(quiz: InQuiz, user=Depends(UserGetter().get_current_use
             await f.write(image_bytes)
 
     return quiz.to_out
-@router.post('/delete', summary='Удалить викторину')
+@router.post('/delete', summary='Удалить викторину', responses={quiz_not_exists.status_code: {'detail': quiz_not_exists},permission_denied.status_code: {'description':permission_denied.detail},user_not_exists.status_code: {'description': user_not_exists.detail}})
 async def on_delete_quiz(quiz: Quiz = Depends(get_quiz), user=Depends(UserGetter().get_current_user)):
     if quiz.user_id != user.id:
         if not user.has_permission('delete_quiz'):
@@ -40,7 +40,7 @@ async def on_delete_quiz(quiz: Quiz = Depends(get_quiz), user=Depends(UserGetter
     await quiz.delete()
 
 
-@router.post('/edit', summary='Изменить викторину')
+@router.post('/edit', summary='Изменить викторину', responses={quiz_not_exists.status_code: {'detail': quiz_not_exists},permission_denied.status_code: {'description':permission_denied.detail},user_not_exists.status_code: {'description': user_not_exists.detail}})
 async def on_edit_quiz(edit_quiz: EditQuiz, user=Depends(UserGetter().get_current_user), quiz: Quiz = Depends(get_quiz)):
     if quiz.user_id != user.id:
         if not user.has_permission('edit_quiz'):
@@ -54,19 +54,19 @@ async def on_edit_quiz(edit_quiz: EditQuiz, user=Depends(UserGetter().get_curren
     await Quiz.find_one(Quiz.id == quiz.id).update_one(Set(new_fields))
 
 
-@router.post('/make_public', summary='Изменить статус публичности')
+@router.post('/make_public', summary='Изменить статус публичности', responses={quiz_not_exists.status_code: {'detail': quiz_not_exists},permission_denied.status_code: {'description':permission_denied.detail},user_not_exists.status_code: {'description': user_not_exists.detail}})
 async def on_make_public(value: bool = Query(example=True), quiz: Quiz = Depends(get_quiz), user=Depends(UserGetter().get_current_user)):
     if not user.has_permission('make_public_quiz'):
         return permission_denied
     await Quiz.find_one(Quiz.id == quiz.id).update_one(Set({Quiz.is_public: value}))
 
 
-@router.post('/get_public', response_model=List[OutQuiz], summary='Получить все публичные викторины')
-async def on_get_public_quiz():
+@router.post('/get_public', response_model=List[OutQuiz], summary='Получить все публичные викторины', responses={user_not_exists.status_code: {'description': user_not_exists.detail}})
+async def on_get_public_quiz(user: User = Depends(UserGetter(is_optional=True).get_current_user)):
     return [quiz.to_out for quiz in await Quiz.find(Quiz.is_public == True).to_list()]
 
 
-@router.post('/get_by_user', response_model=List[OutQuiz], summary='Получить все викторины пользователя')
+@router.post('/get_by_user', response_model=List[OutQuiz], summary='Получить все викторины пользователя', responses={user_not_exists.status_code: {'description': user_not_exists.detail}})
 async def on_get_by_user(user_id: PydanticObjectId = Query(example='641526320dabd6c5f784cef5'), user: User = Depends(UserGetter().get_current_user)):
     all_quiz = await Quiz.find(Quiz.user_id == PydanticObjectId(user_id)).to_list()
     all_quiz = [quiz.to_out for quiz in all_quiz]
@@ -76,6 +76,6 @@ async def on_get_by_user(user_id: PydanticObjectId = Query(example='641526320dab
     return all_quiz
 
 
-@router.post('/get', response_model=OutQuiz, summary='Получить викторину по ID')
+@router.post('/get', response_model=OutQuiz, summary='Получить викторину по ID', responses={quiz_not_exists.status_code: {'detail': quiz_not_exists}, user_not_exists.status_code: {'description': user_not_exists.detail}})
 async def on_get_quiz(quiz = Depends(get_quiz), user: User = Depends(UserGetter().get_current_user)):
     return quiz.to_out

@@ -11,9 +11,6 @@ from pydantic import BaseModel, Field
 from pydantic_geojson import MultiPointModel, PointModel
 from pydantic_geojson._base import Coordinates
 
-from database.models.quiz_session import QuizSession
-
-
 class HistoryRow(BaseModel):
     date: datetime = Field(default_factory=datetime.now)
     quiz_session_id: PydanticObjectId
@@ -33,7 +30,7 @@ class QuestionTypes(str, Enum):
 class Question(BaseModel):
     title: str
     point: PointModel | MultiPointModel
-    answers: List[str] | PointModel | None = None
+    answers: List[str] | PointModel | MultiPointModel| None = None
     question_type: QuestionTypes
 
     min_reward: QuestionCoordinateReward | None = None
@@ -48,18 +45,18 @@ class Question(BaseModel):
                                                    (point.coordinates.lat,
                                                     point.coordinates.lon)).m
 
-                if distance < self.min_reward.distance:
+                if distance > self.min_reward.distance:
                     return 0
 
-                elif distance > self.max_reward.distance:
-                    return self.min_reward.reward
+                elif distance < self.max_reward.distance:
+                    return self.max_reward.reward
 
                 else:
 
                     k = (self.max_reward.reward - self.min_reward.reward) / (
-                            self.max_reward.distance - self.min_reward.distance)
-
-                    reward = self.max_reward.reward - k * (distance - self.min_reward.distance)
+                            self.min_reward.distance - self.max_reward.distance)
+                    print(k)
+                    reward = self.max_reward.reward - k * (distance - self.max_reward.distance)
 
                     return round(reward)
             case QuestionTypes.title:
@@ -67,7 +64,8 @@ class Question(BaseModel):
                     return self.reward
                 return 0
             case QuestionTypes.valid:
-                if point == self.point:
+
+                if point.coordinates.lon == self.point.coordinates.lon and point.coordinates.lat == self.point.coordinates.lat:
                     return self.reward
                 return 0
 
@@ -108,10 +106,10 @@ class InQuiz(BaseModel):
                     },
                     {
                         'title': 'Москва',
-                        'point': MultiPointModel(
+                        'answers': MultiPointModel(
                             coordinates=[Coordinates(lat=10.0, lon=10.0), Coordinates(lat=15.0, lon=15.0),
                                          Coordinates(lat=20.0, lon=20.0)]),
-                        'answers': PointModel(coordinates=Coordinates(lat=10.0, lon=10.0)),
+                        'point': PointModel(coordinates=Coordinates(lat=10.0, lon=10.0)),
                         'question_type': QuestionTypes.valid,
                         'reward': 10,
                     },

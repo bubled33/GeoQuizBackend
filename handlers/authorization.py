@@ -19,7 +19,7 @@ from untils.exceptions import user_already_exists, token_expired, user_invalid_p
 router = APIRouter(prefix='/authorization', tags=['API Авторитизации'])
 
 
-@router.post('/register', status_code=status.HTTP_201_CREATED, summary='Зарегистрироваться')
+@router.post('/register', status_code=status.HTTP_201_CREATED, summary='Зарегистрироваться', responses={user_already_exists.status_code: {'description': user_already_exists.detail}})
 async def on_register(user_data: InUser, redis: Redis = Depends(get_redis),
                       email_manager: EmailManager = Depends(get_email_manager)):
     user = await User.find_one(User.email == user_data.email)
@@ -34,7 +34,7 @@ async def on_register(user_data: InUser, redis: Redis = Depends(get_redis),
     await redis.set(f'Verify-{token}', str(user.id), ex=3000)
 
 
-@router.get('/verify', summary='Верефицировать почту при регистрации по токену')
+@router.get('/verify', summary='Верефицировать почту при регистрации по токену', responses={token_expired.status_code: {'description': token_expired.detail}})
 async def on_verify(token: str = Query(example=uuid.uuid4()), redis: Redis = Depends(get_redis)):
     user_id = (await redis.get(f'Verify-{token}')).decode('utf-8')
     if not user_id:
@@ -42,7 +42,7 @@ async def on_verify(token: str = Query(example=uuid.uuid4()), redis: Redis = Dep
     await User.find_one(User.id == PydanticObjectId(user_id)).update_one(Set({User.status: UserStatuses.active}))
 
 
-@router.get('/verify_change_email', summary='Верефицировать почту при смене по токену')
+@router.get('/verify_change_email', summary='Верефицировать почту при смене по токену', responses={token_expired.status_code: {'description': token_expired.detail,user_already_exists.status_code: {'description': user_already_exists}}})
 async def on_verify_change_email(token: str = Query(example=uuid.uuid4()), redis=Depends(get_redis)):
     user_id, email = (await redis.get(f'ChangeEmail-{token}')).decode('utf-8').split(';')
     if not user_id:
@@ -52,7 +52,7 @@ async def on_verify_change_email(token: str = Query(example=uuid.uuid4()), redis
     await User.find_one(User.id == PydanticObjectId(user_id)).update_one(Set({User.email: email}))
 
 
-@router.post('/token', response_model=Token, summary='Получить токен авторитизации')
+@router.post('/token', response_model=Token, summary='Получить токен авторитизации', responses={user_not_exists.status_code: {'description': user_not_exists.detail}, user_invalid_password.status_code: {'description': user_invalid_password.detail}})
 async def on_login(oauth_form: OAuth2PasswordRequestForm = Depends(), redis: Redis = Depends(get_redis)):
     email, password = oauth_form.username, oauth_form.password
     user = await User.find_one(User.email == email)
@@ -63,7 +63,7 @@ async def on_login(oauth_form: OAuth2PasswordRequestForm = Depends(), redis: Red
     return await user.login(redis)
 
 
-@router.post('/change_password')
+@router.post('/change_password', responses={user_not_exists.status_code: {'description': user_not_exists.detail}, user_invalid_password.status_code: {'description': user_invalid_password.detail}})
 async def on_change_password(old_password: str, new_password: str, user=Depends(UserGetter().get_current_user),
                              redis: Redis = Depends(get_redis)):
     if not user.check_password(old_password):
@@ -73,7 +73,7 @@ async def on_change_password(old_password: str, new_password: str, user=Depends(
     await user.terminate_all(redis)
 
 
-@router.post('/change_email', summary='Начать процедуру смены почты')
+@router.post('/change_email', summary='Начать процедуру смены почты', responses={user_not_exists.status_code: {'description': user_not_exists.detail}})
 async def on_change_email(email: str, user=Depends(UserGetter().get_current_user),
                           email_manager: EmailManager = Depends(get_email_manager), redis: Redis = Depends(get_redis)):
     token = await email_manager.send_change_email(email)

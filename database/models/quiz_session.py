@@ -15,7 +15,6 @@ class QuizSession(Document):
     quiz_id: PydanticObjectId
 
     user_id: PydanticObjectId | None = None
-    username: str | None = None
 
     scores: int = 0
     status: QuizSessionStatuses = QuizSessionStatuses.active
@@ -25,10 +24,9 @@ class QuizSession(Document):
     def to_out(self) -> 'OutQuizSession':
         return OutQuizSession(
             scores=self.scores,
-            satus=self.status,
+            status=self.status,
             current_question=self.current_question,
             user_id=self.user_id,
-            username=self.username,
             quiz_session_id = self.id
         )
 
@@ -39,7 +37,6 @@ class OutQuizSession(BaseModel):
     current_question: int
 
     user_id: PydanticObjectId | None = None
-    username: str | None = None
 
     quiz_session_id: PydanticObjectId
 

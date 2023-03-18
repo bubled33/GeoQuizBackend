@@ -1,0 +1,15 @@
+[Redis]
+host = '80.90.190.174'
+port = 6379
+username = 'default'
+password = 'e2lrn94nm2'
+database = 0
+[MongoDB]
+host = '80.90.190.110'
+port = 27017
+username = 'gen_user'
+password = '1oxn1xdkj6'
+database = 'default_db'
+[Email]
+username = 'zimnitskiymisha@gmail.com'
+password = 'vkfrgnzkehwxbgyq'

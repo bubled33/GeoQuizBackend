@@ -4,6 +4,7 @@ from fastapi import APIRouter, FastAPI
 
 from config import settings
 from database import User
+from database.models.quiz import Quiz
 from untils.email_manager import EmailManager
 from untils.logger import LoggerGroup, ConsoleLogger, Log
 from untils.roles import user_role, admin_role, owner_role
@@ -43,7 +44,7 @@ async def lifespan(app: FastAPI):
             host=settings.MongoDB.host,
             port=settings.MongoDB.port,
             database=settings.MongoDB.database
-        ), models=[User], role_manager=role_manager)
+        ), models=[User, Quiz], role_manager=role_manager)
 
     await beanie_manager.init()
     app.state.beanie_manager = beanie_manager

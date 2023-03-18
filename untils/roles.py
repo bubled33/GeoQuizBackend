@@ -10,11 +10,11 @@ class UserPermissions(Permissions):
 
 
 class AdminPermissions(Permissions):
-    pass
+    make_public_quiz = 'make_public_quiz'
 
 
 class OwnerPermissions(Permissions):
-    pass
+    make_public_quiz = 'make_public_quiz'
 
 
 """

@@ -31,7 +31,10 @@ class User(Document, RoleCarrier):
         return role.tag in self.roles
 
     def has_permission(self, permission: str):
-        return bool(next(role for role in self.roles if self._role_manager.get(role).has_permission(permission)))
+        for role in self.roles:
+            if self._role_manager.get(role).has_permission(permission):
+                return True
+        return False
 
     def check_password(self, password: str) -> bool:
         return bcrypt.checkpw(password.encode('utf-8'), self.hashed_password.encode('utf-8'))
@@ -48,3 +51,9 @@ class User(Document, RoleCarrier):
         token = uuid4()
         await redis.set(f'Auth-{token}', str(self.id))
         return Token(access_token=str(token))
+
+
+class OutAccount(BaseModel):
+    email: EmailStr
+    username: str
+    roles: List[str]

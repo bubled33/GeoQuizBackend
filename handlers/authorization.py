@@ -83,3 +83,12 @@ async def on_change_email(email: str, user=Depends(get_current_user),
     if await User.find_one(User.email == email):
         return user_already_exists
     await redis.set(f'ChangeEmail-{token}', f'{user.id};{email}', ex=30000)
+
+
+@router.post('/get')
+async def on_get_user():
+    pass
+
+@router.post('/get_users')
+async def on_get_users():
+    pass

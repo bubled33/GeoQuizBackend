@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import Enum
-from typing import List, Dict
+from typing import List
 
 import geopy.distance
 from beanie import PydanticObjectId, Document
@@ -10,6 +10,7 @@ from fastapi import File, UploadFile
 from pydantic import BaseModel, Field
 from pydantic_geojson import MultiPointModel, PointModel
 from pydantic_geojson._base import Coordinates
+
 
 class HistoryRow(BaseModel):
     date: datetime = Field(default_factory=datetime.now)
@@ -30,7 +31,7 @@ class QuestionTypes(str, Enum):
 class Question(BaseModel):
     title: str
     point: PointModel | MultiPointModel
-    answers: List[str] | PointModel | MultiPointModel| None = None
+    answers: List[str] | PointModel | MultiPointModel | None = None
     question_type: QuestionTypes
 
     min_reward: QuestionCoordinateReward | None = None

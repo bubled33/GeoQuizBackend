@@ -32,7 +32,8 @@ async def on_register(user_data: InUser, redis: Redis = Depends(get_redis),
 
     token = await email_manager.send_verify_url(user_data.email)
     await redis.set(f'Verify-{token}', str(user.id), ex=3000)
-
+    url = f'http://213.226.125.145:8000/api/authorization/verify?token={token}'
+    return {'test_verify': token}
 
 @router.get('/verify', summary='Верефицировать почту при регистрации по токену', responses={token_expired.status_code: {'description': token_expired.detail}})
 async def on_verify(token: str = Query(example=uuid.uuid4()), redis: Redis = Depends(get_redis)):
@@ -80,3 +81,5 @@ async def on_change_email(email: str, user=Depends(UserGetter().get_current_user
     if await User.find_one(User.email == email):
         return user_already_exists
     await redis.set(f'ChangeEmail-{token}', f'{user.id};{email}', ex=30000)
+    url = f'http://213.226.125.145:8000/api/authorization/verify?token={token}'
+    return {'test_verify': token}

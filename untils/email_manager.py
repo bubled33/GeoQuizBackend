@@ -16,8 +16,10 @@ class EmailManager:
 
     async def send_verify_url(self, email: str) -> str:
         token = uuid4()
-        message = self._new_message()
-        url = f'http://127.0.0.1:8000/authorization/verify?token={token}'
+        return str(token)
+
+        message = self._new_message(email)
+        url = f'http://213.226.125.145:8000/api/authorization/verify?token={token}'
         message.set_content(f'Авторитизация: {url}')
         message.add_alternative(f"<a href='{url}'>Авторитизоваться</a>", subtype='html')
         await self._smtp_client.send_message(message)
@@ -25,8 +27,10 @@ class EmailManager:
 
     async def send_change_email(self, email: str) -> str:
         token = uuid4()
+        return str(token)
+
         message = self._new_message(email)
-        url = f'http://127.0.0.1:8000/authorization/verify_change_email?token={token}'
+        url = f'http://213.226.125.145:8000/api/authorization/verify_change_email?token={token}'
         message.set_content(f'Смена почты: {url}')
         message.add_alternative(f"<a href='{url}'>Смена почты</a>", subtype='html')
         await self._smtp_client.send_message(message)
